@@ -1,0 +1,74 @@
+Phase 1 — Project Foundation
+Create project
+React setup
+FastAPI setup
+PostgreSQL setup
+Environment variables
+Connect FastAPI → PostgreSQL
+Basic API health check
+Phase 2 — Database
+Users
+Factory
+Machines
+Sensor readings
+Energy readings
+Anomalies
+Recommendations
+Maintenance
+Optimization records
+Phase 3 — Backend
+Authentication
+Factory APIs
+Machine APIs
+Sensor APIs
+Energy APIs
+Anomaly APIs
+Optimization APIs
+Phase 4 — Simulation Engine
+Generate machine data
+Generate solar data
+Generate grid/tariff data
+Store data in PostgreSQL
+Stream live data with WebSockets
+Phase 5 — ML
+Feature engineering
+Isolation Forest
+Anomaly score
+Machine health score
+Risk classification
+Maintenance recommendations
+Phase 6 — Energy Intelligence
+Solar utilization
+Grid dependency
+Idle machine detection
+Energy waste
+Cost calculation
+Dynamic solar opportunities
+Phase 7 — Optimization
+Production constraints
+Solar availability
+Electricity tariff
+Machine health
+Production deadline
+Recommended schedule
+Phase 8 — Frontend
+Dashboard
+Machines
+Machine Details
+Energy
+Optimization
+Anomalies
+Sustainability
+Reports
+Phase 9 — Integration
+Connect every API
+WebSockets
+Real-time charts
+Alerts
+Loading/error states
+Phase 10 — Production
+Testing
+Docker
+Deployment
+Documentation
+Final README
