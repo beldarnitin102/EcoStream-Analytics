@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from app.core.database import engine
+from app.routes.factory import router as factory_router
+from app.models import Factory, Machine, SensorReading
+from app.routes.machine import router as machine_router
 
 app = FastAPI(title="EcoTwin API")
 
@@ -21,3 +24,7 @@ def database_test():
             "database": "connected",
             "result": result.scalar()
         }
+
+
+app.include_router(factory_router)
+app.include_router(machine_router)

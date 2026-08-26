@@ -60,3 +60,9 @@ class Machine(Base):
         "Factory",
         back_populates="machines"
     )
+
+    sensor_readings = relationship(
+    "SensorReading",
+    back_populates="machine",
+    cascade="all, delete-orphan"
+)
