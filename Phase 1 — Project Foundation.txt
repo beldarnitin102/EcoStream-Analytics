@@ -1,3 +1,4 @@
+pgadmin 
 Phase 1 — Project Foundation
 Create project
 React setup
