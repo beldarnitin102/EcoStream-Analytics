@@ -7,6 +7,7 @@ from app.models import Factory, Machine, SensorReading
 from app.routes.machine import router as machine_router
 from app.routes.sensor_reading import router as sensor_reading_router
 from app.routes.anomaly import router as anomaly_router
+from app.routes.live_data import router as live_data_router
 
 app = FastAPI(title="EcoTwin API")
 
@@ -32,3 +33,4 @@ app.include_router(factory_router)
 app.include_router(machine_router)
 app.include_router(sensor_reading_router)
 app.include_router(anomaly_router)
+app.include_router(live_data_router)
