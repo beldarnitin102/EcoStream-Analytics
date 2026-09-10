@@ -1,12 +1,8 @@
-from app.ml.data_loader import load_sensor_data
+from app.ml.anomaly_service import AnomalyService
 
 
-data = load_sensor_data(machine_id=1)
+service = AnomalyService()
 
-print("Total rows:", len(data))
+result = service.analyze_machine(machine_id=1)
 
-print("\nColumns:")
-print(data.columns.tolist())
-
-print("\nFirst 5 readings:")
-print(data.head())
+print(result)
