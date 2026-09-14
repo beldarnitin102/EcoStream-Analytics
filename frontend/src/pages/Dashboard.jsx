@@ -3,27 +3,27 @@ import MachineCard from "../components/dashboard/MachineCard";
 
 function Dashboard() {
   return (
-    <div>
-      {/* Page Heading */}
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="w-full">
+      {/* Page Header */}
+      <div className="mb-7 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#172033]">
+          <h1 className="text-[28px] font-bold leading-tight text-[#172033]">
             Factory Dashboard
           </h1>
 
-          <p className="mt-1 text-sm text-[#667085]">
+          <p className="mt-2 text-sm text-[#667085]">
             Real-time insights for smarter, sustainable manufacturing
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm font-medium text-[#18a673]">
-          <span className="h-2 w-2 rounded-full bg-[#18a673]"></span>
+        <div className="mt-1 flex items-center gap-2 text-sm font-medium text-[#18a673]">
+          <span className="h-2 w-2 rounded-full bg-[#18a673]" />
           System Online
         </div>
       </div>
 
-      {/* Statistics */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total Machines"
           value="3"
@@ -58,18 +58,19 @@ function Dashboard() {
         />
       </div>
 
-      {/* Machine Overview */}
-      <div className="mb-4 mt-8">
-        <h2 className="text-lg font-semibold text-[#172033]">
+      {/* Machine Section */}
+      <div className="mb-5 mt-9">
+        <h2 className="text-[21px] font-bold text-[#172033]">
           Machine Overview
         </h2>
 
-        <p className="mt-1 text-sm text-[#667085]">
+        <p className="mt-1.5 text-sm text-[#667085]">
           Current operational status and machine health
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Machine Cards */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <MachineCard
           name="CNC Mill"
           machineCode="CNC-001"

@@ -26,77 +26,72 @@ function MachineCard({
   const currentStatus = statusConfig[status] || statusConfig.IDLE;
 
   return (
-    <div className="bg-white border border-[#e4e7ec] rounded-lg p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
-      {/* Header */}
+    <div className="min-h-[245px] rounded-xl border border-[#e4e7ec] bg-white p-5 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
+      {/* Machine Header */}
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-base font-semibold text-[#172033]">
+        <div className="min-w-0">
+          <h3 className="truncate text-[16px] font-semibold text-[#172033]">
             {name}
           </h3>
 
-          <span className="mt-1 block text-xs text-[#98a2b3]">
-            {machineCode} · {type}
-          </span>
+          <p className="mt-1 text-[12px] text-[#98a2b3]">
+            {machineCode} <span className="mx-1">·</span> {type}
+          </p>
         </div>
 
         <div
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${currentStatus.badge}`}
+          className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold ${currentStatus.badge}`}
         >
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${currentStatus.dot}`}
-          ></span>
+          <span className={`h-1.5 w-1.5 rounded-full ${currentStatus.dot}`} />
 
           {status}
         </div>
       </div>
 
       {/* Health */}
-      <div className="mt-6">
+      <div className="mt-7">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium text-[#667085]">
+          <span className="text-[12px] font-medium text-[#667085]">
             Machine Health
           </span>
 
-          <strong className="text-sm font-semibold text-[#172033]">
+          <span className="text-[13px] font-bold text-[#172033]">
             {health}%
-          </strong>
+          </span>
         </div>
 
         <div className="h-2 w-full overflow-hidden rounded-full bg-[#eef1f4]">
           <div
-            className="h-full rounded-full bg-[#18a673] transition-all duration-500"
+            className="h-full rounded-full bg-[#18a673]"
             style={{ width: `${health}%` }}
-          ></div>
+          />
         </div>
       </div>
 
       {/* Metrics */}
-      <div className="mt-6 grid grid-cols-3 divide-x divide-[#e4e7ec]">
-        <div className="pr-3">
-          <span className="block text-[11px] text-[#98a2b3]">
-            Temperature
-          </span>
-          <strong className="mt-1 block text-sm font-semibold text-[#172033]">
+      <div className="mt-7 grid grid-cols-3 border-t border-[#e4e7ec] pt-5">
+        <div className="border-r border-[#e4e7ec] pr-3">
+          <p className="text-[11px] text-[#98a2b3]">Temperature</p>
+
+          <p className="mt-1.5 text-[14px] font-semibold text-[#172033]">
             {temperature}°C
-          </strong>
+          </p>
         </div>
 
-        <div className="px-3">
-          <span className="block text-[11px] text-[#98a2b3]">
-            Vibration
-          </span>
-          <strong className="mt-1 block text-sm font-semibold text-[#172033]">
+        <div className="border-r border-[#e4e7ec] px-3">
+          <p className="text-[11px] text-[#98a2b3]">Vibration</p>
+
+          <p className="mt-1.5 text-[14px] font-semibold text-[#172033]">
             {vibration} mm/s
-          </strong>
+          </p>
         </div>
 
         <div className="pl-3">
-          <span className="block text-[11px] text-[#98a2b3]">
-            Power
-          </span>
-          <strong className="mt-1 block text-sm font-semibold text-[#172033]">
+          <p className="text-[11px] text-[#98a2b3]">Power</p>
+
+          <p className="mt-1.5 text-[14px] font-semibold text-[#172033]">
             {power} kW
-          </strong>
+          </p>
         </div>
       </div>
     </div>

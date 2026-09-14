@@ -1,49 +1,63 @@
-function Header() {
+function Header({ onMainHubClick }) {
   return (
-    <header className="flex h-[68px] items-center justify-between border-b border-[#e4e7ec] bg-white px-5 sm:px-6 lg:px-7">
+    <header className="flex h-[68px] w-full items-center justify-between border-b border-[#e4e7ec] bg-white px-6 lg:px-8">
+      
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-[#98a2b3]">Main Hub</span>
+      <div className="flex min-w-0 items-center gap-2 text-sm">
+        <button
+          type="button"
+          onClick={onMainHubClick}
+          className="text-[#667085] transition hover:text-[#1597d4]"
+        >
+          Main Hub
+        </button>
+
         <span className="text-[#98a2b3]">›</span>
-        <strong className="font-semibold text-[#172033]">
+
+        <span className="font-semibold text-[#172033]">
           Factory Dashboard
-        </strong>
+        </span>
       </div>
 
-      {/* Right Side */}
-      <div className="flex items-center gap-4">
+      {/* Header Actions */}
+      <div className="ml-6 flex shrink-0 items-center gap-4">
+        
         {/* Search */}
-        <div className="hidden items-center gap-2 rounded-lg border border-[#e4e7ec] bg-[#f9fafb] px-3 py-2 sm:flex">
-          <span className="text-lg text-[#98a2b3]">⌕</span>
+        <div className="flex h-10 w-[180px] items-center gap-2 rounded-lg border border-[#e4e7ec] bg-white px-3">
+          <span className="text-base text-[#98a2b3]">⌕</span>
 
           <input
             type="text"
             placeholder="Search metrics..."
-            className="w-40 bg-transparent text-sm text-[#172033] outline-none placeholder:text-[#98a2b3]"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[#172033] outline-none placeholder:text-[#98a2b3]"
           />
         </div>
 
         {/* Notification */}
-        <button className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#e4e7ec] bg-white text-[#667085] transition hover:bg-[#f9fafb]">
+        <button
+          type="button"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#e4e7ec] bg-white text-sm text-[#667085] transition hover:bg-[#f9fafb]"
+        >
           ♧
         </button>
 
         {/* Profile */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e8f6fc] text-sm font-semibold text-[#0877ad]">
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f6fc] text-sm font-semibold text-[#0877ad]">
             N
           </div>
 
-          <div className="hidden sm:block">
-            <strong className="block text-sm font-semibold text-[#172033]">
+          <div className="leading-tight">
+            <p className="text-sm font-semibold text-[#172033]">
               Nitin
-            </strong>
+            </p>
 
-            <small className="block text-[10px] font-medium tracking-wide text-[#98a2b3]">
+            <p className="mt-1 text-[10px] font-medium tracking-wide text-[#98a2b3]">
               ADMIN
-            </small>
+            </p>
           </div>
         </div>
+
       </div>
     </header>
   );

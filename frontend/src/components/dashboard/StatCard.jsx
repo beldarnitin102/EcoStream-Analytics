@@ -7,17 +7,20 @@ function StatCard({ title, value, unit, description, icon, status }) {
       : "bg-[#e8f6fc] text-[#1597d4]";
 
   return (
-    <div className="bg-white border border-[#e4e7ec] rounded-lg p-5 shadow-[0_1px_3px_rgba(16,24,40,0.06)]">
+    <div className="min-h-[148px] rounded-xl border border-[#e4e7ec] bg-white p-5 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-[#667085]">
+          <p className="text-[13px] font-medium text-[#667085]">
             {title}
           </p>
 
-          <div className="mt-2 text-3xl font-bold text-[#172033]">
-            {value}
+          <div className="mt-3 flex items-baseline gap-1">
+            <span className="text-[30px] font-bold leading-none text-[#172033]">
+              {value}
+            </span>
+
             {unit && (
-              <span className="ml-1 text-lg font-semibold text-[#667085]">
+              <span className="text-base font-semibold text-[#667085]">
                 {unit}
               </span>
             )}
@@ -25,14 +28,14 @@ function StatCard({ title, value, unit, description, icon, status }) {
         </div>
 
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg text-lg ${iconStyle}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-lg ${iconStyle}`}
         >
           {icon}
         </div>
       </div>
 
       {description && (
-        <p className="mt-4 text-xs text-[#98a2b3]">
+        <p className="mt-5 text-[12px] text-[#98a2b3]">
           {description}
         </p>
       )}
