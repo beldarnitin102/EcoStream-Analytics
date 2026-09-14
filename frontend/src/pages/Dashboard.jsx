@@ -1,10 +1,113 @@
+import { useEffect, useState } from "react";
 import StatCard from "../components/dashboard/StatCard";
 import MachineCard from "../components/dashboard/MachineCard";
 
+const API_URL = "http://127.0.0.1:8000";
+
 function Dashboard() {
+  const [machines, setMachines] = useState([]);
+  const [liveData, setLiveData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  // Fetch registered machines
+  const fetchMachines = async () => {
+    try {
+      const response = await fetch(`${API_URL}/machines/`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch machines");
+      }
+
+      const data = await response.json();
+      setMachines(data);
+    } catch (error) {
+      console.error("Machine fetch error:", error);
+    }
+  };
+
+  // Fetch latest sensor data for every machine
+  const fetchLiveData = async () => {
+    try {
+      const results = await Promise.all(
+        machines.map(async (machine) => {
+          const response = await fetch(`${API_URL}/live-data/${machine.id}`);
+
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch live data for machine ${machine.id}`,
+            );
+          }
+
+          const data = await response.json();
+
+          return {
+            machineId: machine.id,
+            reading: data.length > 0 ? data[0] : null,
+          };
+        }),
+      );
+
+      const liveDataMap = {};
+
+      results.forEach(({ machineId, reading }) => {
+        liveDataMap[machineId] = reading;
+      });
+
+
+
+      setLiveData(liveDataMap);
+      setLoading(false);
+    } catch (error) {
+      console.error("Live data fetch error:", error);
+      setLoading(false);
+    }
+  };
+
+  // Load machines once
+  useEffect(() => {
+    fetchMachines();
+  }, []);
+
+  // Start live data polling after machines are loaded
+  useEffect(() => {
+    if (machines.length === 0) {
+      return;
+    }
+
+    fetchLiveData();
+
+    const interval = setInterval(() => {
+      fetchLiveData();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [machines]);
+
+  // Calculate dashboard statistics
+  const totalMachines = machines.length;
+
+  const runningMachines = machines.filter(
+    (machine) => machine.status === "RUNNING",
+  ).length;
+
+  const averageHealth =
+    machines.length > 0
+      ? Math.round(
+          machines.reduce(
+            (total, machine) => total + (machine.health_score ?? 0),
+            0,
+          ) / machines.length,
+        )
+      : 0;
+
+  const totalPower = Object.values(liveData).reduce(
+    (total, reading) => total + (reading?.power ?? 0),
+    0,
+  );
+
   return (
     <div className="w-full">
-      {/* Page Header */}
+      {/* Page Heading */}
       <div className="mb-7 flex items-start justify-between">
         <div>
           <h1 className="text-[28px] font-bold leading-tight text-[#172033]">
@@ -22,18 +125,18 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Statistics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Total Machines"
-          value="3"
+          value={loading ? "—" : totalMachines}
           description="Registered machines"
           icon="◫"
         />
 
         <StatCard
           title="Machines Running"
-          value="2"
+          value={loading ? "—" : runningMachines}
           description="Currently operational"
           icon="▶"
           status="success"
@@ -41,7 +144,7 @@ function Dashboard() {
 
         <StatCard
           title="Average Health"
-          value="94"
+          value={loading ? "—" : averageHealth}
           unit="%"
           description="Across all machines"
           icon="♥"
@@ -50,7 +153,7 @@ function Dashboard() {
 
         <StatCard
           title="Power Consumption"
-          value="5.6"
+          value={loading ? "—" : (totalPower / 1000).toFixed(2)}
           unit="kW"
           description="Current factory load"
           icon="ϟ"
@@ -58,7 +161,7 @@ function Dashboard() {
         />
       </div>
 
-      {/* Machine Section */}
+      {/* Machine Overview */}
       <div className="mb-5 mt-9">
         <h2 className="text-[21px] font-bold text-[#172033]">
           Machine Overview
@@ -71,38 +174,23 @@ function Dashboard() {
 
       {/* Machine Cards */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <MachineCard
-          name="CNC Mill"
-          machineCode="CNC-001"
-          type="CNC"
-          status="RUNNING"
-          health={96}
-          temperature={68.4}
-          vibration={2.1}
-          power={2.1}
-        />
+        {machines.map((machine) => {
+          const reading = liveData[machine.id];
 
-        <MachineCard
-          name="Industrial Oven"
-          machineCode="OVN-001"
-          type="Oven"
-          status="WARNING"
-          health={88}
-          temperature={74.2}
-          vibration={2.8}
-          power={2.4}
-        />
-
-        <MachineCard
-          name="Air Compressor"
-          machineCode="CMP-001"
-          type="Compressor"
-          status="IDLE"
-          health={98}
-          temperature={61.7}
-          vibration={1.6}
-          power={1.1}
-        />
+          return (
+            <MachineCard
+              key={machine.id}
+              name={machine.name}
+              machineCode={machine.machine_code}
+              type={machine.machine_type}
+              status={machine.status}
+              health={Math.round(machine.health_score ?? 0)}
+              temperature={reading?.temperature ?? "—"}
+              vibration={reading?.vibration ?? "—"}
+              power={reading?.power ? (reading.power / 1000).toFixed(2) : "—"}
+            />
+          );
+        })}
       </div>
     </div>
   );

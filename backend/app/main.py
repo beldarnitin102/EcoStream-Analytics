@@ -1,22 +1,35 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.core.database import engine
 from app.routes.factory import router as factory_router
-from app.models import Factory, Machine, SensorReading
 from app.routes.machine import router as machine_router
 from app.routes.sensor_reading import router as sensor_reading_router
 from app.routes.anomaly import router as anomaly_router
 from app.routes.live_data import router as live_data_router
+from app.models import Factory, Machine, SensorReading
+
 
 app = FastAPI(title="EcoTwin API")
 
 
+# Allow React frontend to communicate with FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 @app.get("/")
 def root():
-    return {
-        "message": "EcoTwin API is running"
-    }
+    return {"message": "EcoTwin API is running"}
 
 
 @app.get("/db-test")
@@ -25,7 +38,7 @@ def database_test():
         result = connection.execute(text("SELECT 1"))
         return {
             "database": "connected",
-            "result": result.scalar()
+            "result": result.scalar(),
         }
 
 
