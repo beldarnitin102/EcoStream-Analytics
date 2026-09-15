@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.sensor_reading import SensorReading
 
-
 router = APIRouter(
     prefix="/live-data",
     tags=["Live Data"]
@@ -19,7 +18,7 @@ def get_live_data(
     readings = (
         db.query(SensorReading)
         .filter(SensorReading.machine_id == machine_id)
-        .order_by(SensorReading.timestamp.desc())
+        .order_by(SensorReading.id.desc())
         .limit(20)
         .all()
     )
