@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.database import SessionLocal
 from app.models.sensor_reading import SensorReading
@@ -25,7 +25,7 @@ class LiveDatabaseSimulator:
             try:
                 sensor_reading = SensorReading(
                     machine_id=self.machine_id,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(timezone.utc),
                     temperature=reading["temperature"],
                     vibration=reading["vibration"],
                     voltage=reading["voltage"],

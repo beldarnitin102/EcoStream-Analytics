@@ -33,7 +33,9 @@ function Dashboard() {
     try {
       const results = await Promise.all(
         targets.map(async (id) => {
-          const response = await fetch(`${API_URL}/live-data/${id}`);
+          const response = await fetch(`${API_URL}/live-data/${id}`, {
+            cache: 'no-store',
+          });
           if (!response.ok) throw new Error(`Failed live data for machine ${id}`);
           
           const data = await response.json();
@@ -66,25 +68,29 @@ function Dashboard() {
 
   useEffect(() => {
     let intervalId;
+    let isMounted = true;
 
     const initDashboard = async () => {
       const initialMachines = await fetchMachines();
+      if (!isMounted) return;
       if (initialMachines.length === 0) {
         setLoading(false);
         return;
       }
 
       await fetchLiveData();
+      if (!isMounted) return;
 
       // Polls every 1 second correctly 
       intervalId = setInterval(() => {
-        fetchLiveData();
+        if (isMounted) fetchLiveData();
       }, 1000);
     };
 
     initDashboard();
 
     return () => {
+      isMounted = false;
       if (intervalId) clearInterval(intervalId);
     };
   }, [fetchMachines, fetchLiveData]);
