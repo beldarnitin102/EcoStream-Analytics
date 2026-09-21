@@ -1,17 +1,35 @@
+import { useNavigate, useLocation } from "react-router-dom";
+
 function Sidebar({ isOpen, onToggle }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const navItems = [
-    ["▦", "Dashboard"],
-    ["◫", "Machines"],
-    ["⌁", "Live Data"],
-    ["⚠", "Anomaly Detection"],
-    ["◒", "Energy & CO₂"],
-    ["◷", "Simulation"],
-    ["▤", "Reports"],
+    { icon: "▦", label: "Dashboard", path: "/" },
+    { icon: "◫", label: "Machines", path: "/machines" },
+    { icon: "⌁", label: "Live Data", path: "/live-data" },
+    {
+      icon: "⚠",
+      label: "Anomaly Detection",
+      path: "/anomaly-detection",
+    },
+    { icon: "◒", label: "Energy & CO₂", path: "/energy-co2" },
+    { icon: "◷", label: "Simulation", path: "/simulation" },
+    { icon: "▤", label: "Reports", path: "/reports" },
   ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+
+    // Close mobile sidebar after navigation
+    if (window.innerWidth < 1024) {
+      onToggle();
+    }
+  };
 
   return (
     <>
-      {/* Mobile Overlay */}
+      {/* Mobile overlay */}
       <div
         onClick={onToggle}
         className={`fixed inset-0 z-40 bg-black/30 transition-opacity duration-300 lg:hidden ${
@@ -21,7 +39,6 @@ function Sidebar({ isOpen, onToggle }) {
         }`}
       />
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed left-0 top-0 z-50
@@ -49,7 +66,6 @@ function Sidebar({ isOpen, onToggle }) {
             </span>
           </div>
 
-          {/* Mobile Close Button */}
           <button
             type="button"
             onClick={onToggle}
@@ -63,27 +79,32 @@ function Sidebar({ isOpen, onToggle }) {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6">
           <div className="space-y-1.5">
-            {navItems.map(([icon, label], index) => (
-              <button
-                key={label}
-                type="button"
-                className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-[13px] font-medium transition ${
-                  index === 0
-                    ? "bg-[#1597d4] text-white"
-                    : "text-white/60 hover:bg-white/[0.06] hover:text-white"
-                }`}
-              >
-                <span className="flex w-5 justify-center text-base">
-                  {icon}
-                </span>
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
 
-                <span>{label}</span>
-              </button>
-            ))}
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => handleNavigation(item.path)}
+                  className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-[13px] font-medium transition ${
+                    isActive
+                      ? "bg-[#1597d4] text-white"
+                      : "text-white/60 hover:bg-white/[0.06] hover:text-white"
+                  }`}
+                >
+                  <span className="flex w-5 justify-center text-base">
+                    {item.icon}
+                  </span>
+
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </div>
         </nav>
 
-        {/* Factory */}
+        {/* Factory info */}
         <div className="mx-4 mb-5 flex shrink-0 items-center gap-3 rounded-lg border border-white/[0.08] bg-white/[0.04] px-4 py-3.5">
           <span className="h-2 w-2 shrink-0 rounded-full bg-[#18a673]" />
 
@@ -97,7 +118,6 @@ function Sidebar({ isOpen, onToggle }) {
             </small>
           </div>
 
-          {/* Bottom Close Button */}
           <button
             type="button"
             onClick={onToggle}

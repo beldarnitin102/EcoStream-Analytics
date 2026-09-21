@@ -1,4 +1,4 @@
-import threading
+# import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +11,7 @@ from app.routes.sensor_reading import router as sensor_reading_router
 from app.routes.anomaly import router as anomaly_router
 from app.routes.live_data import router as live_data_router
 from app.models import Factory, Machine, SensorReading
-from app.simulator.live_database import LiveDatabaseSimulator
+# from app.simulator.live_database import LiveDatabaseSimulator
 
 
 app = FastAPI(title="EcoTwin API")
@@ -31,18 +31,18 @@ app.add_middleware(
 )
 
 
-@app.on_event("startup")
-def start_live_simulator():
-    simulator = LiveDatabaseSimulator(machine_id=1)
+# @app.on_event("startup")
+# def start_live_simulator():
+#     simulator = LiveDatabaseSimulator(machine_id=1)
 
-    simulator_thread = threading.Thread(
-        target=simulator.run,
-        daemon=True
-    )
+#     simulator_thread = threading.Thread(
+#         target=simulator.run,
+#         daemon=True
+#     )
 
-    simulator_thread.start()
+#     simulator_thread.start()
 
-    print("EcoTwin live simulator started.")
+#     print("EcoTwin live simulator started.")
 
 
 @app.get("/")
