@@ -3,25 +3,41 @@ import { useEffect, useState } from "react";
 const API_URL = "http://127.0.0.1:8000";
 const MACHINE_ID = 1;
 
-// Temporary frontend simulation values.
-// We will replace these with backend energy calculations later.
-const ENERGY_CONFIG = {
-  solarShare: 62,
-  gridShare: 38,
-  currentCost: 1840,
-  optimizedCost: 1515,
-  currentCO2: 82,
-  optimizedCO2: 69,
-  solarEnergy: 48.6,
-  gridEnergy: 29.8,
-  idleWaste: 7.4,
-};
-
 function EnergyCO2() {
-  const [reading, setReading] = useState(null);
+  const [period, setPeriod] = useState("7");
+  const [energyData, setEnergyData] = useState(null);
+  const [currentPower, setCurrentPower] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const fetchLivePower = async () => {
+  const fetchEnergyData = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `${API_URL}/energy/${MACHINE_ID}?days=${period}&t=${Date.now()}`,
+        {
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch energy data");
+      }
+
+      const data = await response.json();
+
+      setEnergyData(data);
+      setError("");
+    } catch (err) {
+      console.error("Energy data error:", err);
+      setError("Unable to load energy data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCurrentPower = async () => {
     try {
       const response = await fetch(
         `${API_URL}/live-data/${MACHINE_ID}?t=${Date.now()}`,
@@ -37,41 +53,29 @@ function EnergyCO2() {
       const data = await response.json();
 
       if (data.length > 0) {
-        setReading(data[0]);
+        setCurrentPower(data[0].power / 1000);
       }
-    } catch (error) {
-      console.error("Energy live data error:", error);
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Live power error:", err);
     }
   };
 
   useEffect(() => {
-    fetchLivePower();
+    fetchEnergyData();
+  }, [period]);
+
+  useEffect(() => {
+    fetchCurrentPower();
 
     const interval = setInterval(() => {
-      fetchLivePower();
+      fetchCurrentPower();
     }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const currentPower =
-    reading?.power != null ? (reading.power / 1000).toFixed(2) : "—";
-
-  const costSaving = ENERGY_CONFIG.currentCost - ENERGY_CONFIG.optimizedCost;
-
-  const co2Reduction = ENERGY_CONFIG.currentCO2 - ENERGY_CONFIG.optimizedCO2;
-
-  const costSavingPercentage =
-    ENERGY_CONFIG.currentCost > 0
-      ? ((costSaving / ENERGY_CONFIG.currentCost) * 100).toFixed(1)
-      : 0;
-
-  const co2ReductionPercentage =
-    ENERGY_CONFIG.currentCO2 > 0
-      ? ((co2Reduction / ENERGY_CONFIG.currentCO2) * 100).toFixed(1)
-      : 0;
+  const solarShare = energyData?.solar_share_percent ?? 0;
+  const gridShare = energyData?.grid_share_percent ?? 0;
 
   return (
     <div className="w-full">
@@ -87,43 +91,67 @@ function EnergyCO2() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm font-medium text-[#18a673]">
-          <span className="h-2 w-2 rounded-full bg-[#18a673]" />
-          Energy Monitoring
+        <div className="flex items-center gap-3">
+          <select
+            value={period}
+            onChange={(event) => setPeriod(event.target.value)}
+            className="h-10 rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
+          >
+            <option value="1">Last 1 Day</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+
+          <div className="flex items-center gap-2 text-sm font-medium text-[#18a673]">
+            <span className="h-2 w-2 rounded-full bg-[#18a673]" />
+            Live
+          </div>
         </div>
       </div>
 
-      {/* Current Energy */}
+      {error && (
+        <div className="mb-6 rounded-lg border border-[#fdecec] bg-[#fdecec] px-4 py-3 text-sm text-[#dc4b4b]">
+          {error}
+        </div>
+      )}
+
+      {/* Summary */}
       <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Current Power"
-          value={loading ? "—" : currentPower}
+          value={currentPower != null ? currentPower.toFixed(2) : "—"}
           unit="kW"
-          description="Live factory load"
+          description="Live machine load"
+        />
+
+        <MetricCard
+          title="Total Energy"
+          value={
+            loading ? "—" : (energyData?.total_energy_kwh?.toFixed(2) ?? "0.00")
+          }
+          unit="kWh"
+          description={`Last ${period} days`}
         />
 
         <MetricCard
           title="Solar Energy"
-          value={ENERGY_CONFIG.solarEnergy}
+          value={
+            loading ? "—" : (energyData?.solar_energy_kwh?.toFixed(2) ?? "0.00")
+          }
           unit="kWh"
-          description="Simulated renewable contribution"
+          description={`${solarShare}% solar contribution`}
           valueClass="text-[#18a673]"
         />
 
         <MetricCard
           title="Grid Energy"
-          value={ENERGY_CONFIG.gridEnergy}
+          value={
+            loading ? "—" : (energyData?.grid_energy_kwh?.toFixed(2) ?? "0.00")
+          }
           unit="kWh"
-          description="Simulated grid consumption"
+          description={`${gridShare}% grid contribution`}
           valueClass="text-[#1597d4]"
-        />
-
-        <MetricCard
-          title="Idle Waste"
-          value={ENERGY_CONFIG.idleWaste}
-          unit="kWh"
-          description="Simulated avoidable usage"
-          valueClass="text-[#e99a00]"
         />
       </div>
 
@@ -132,74 +160,24 @@ function EnergyCO2() {
         <h2 className="text-[21px] font-bold text-[#172033]">Energy Mix</h2>
 
         <p className="mt-1.5 text-sm text-[#667085]">
-          Simulated solar and grid contribution for the current operating period
+          Calculated from sensor readings for the selected period
         </p>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[13px] font-medium text-[#667085]">
-                Solar Contribution
-              </p>
+        <EnergyMixCard
+          title="Solar Contribution"
+          percentage={solarShare}
+          energy={energyData?.solar_energy_kwh}
+          type="solar"
+        />
 
-              <p className="mt-2 text-[32px] font-bold text-[#18a673]">
-                {ENERGY_CONFIG.solarShare}%
-              </p>
-            </div>
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e6f8f1] text-lg text-[#18a673]">
-              ☀
-            </div>
-          </div>
-
-          <div className="mt-6 h-3 overflow-hidden rounded-full bg-[#eef1f4]">
-            <div
-              className="h-full rounded-full bg-[#18a673]"
-              style={{
-                width: `${ENERGY_CONFIG.solarShare}%`,
-              }}
-            />
-          </div>
-
-          <div className="mt-3 flex justify-between text-[12px] text-[#98a2b3]">
-            <span>Solar</span>
-            <span>{ENERGY_CONFIG.solarEnergy} kWh</span>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[13px] font-medium text-[#667085]">
-                Grid Contribution
-              </p>
-
-              <p className="mt-2 text-[32px] font-bold text-[#1597d4]">
-                {ENERGY_CONFIG.gridShare}%
-              </p>
-            </div>
-
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e8f6fc] text-lg text-[#1597d4]">
-              ⚡
-            </div>
-          </div>
-
-          <div className="mt-6 h-3 overflow-hidden rounded-full bg-[#eef1f4]">
-            <div
-              className="h-full rounded-full bg-[#1597d4]"
-              style={{
-                width: `${ENERGY_CONFIG.gridShare}%`,
-              }}
-            />
-          </div>
-
-          <div className="mt-3 flex justify-between text-[12px] text-[#98a2b3]">
-            <span>Grid</span>
-            <span>{ENERGY_CONFIG.gridEnergy} kWh</span>
-          </div>
-        </div>
+        <EnergyMixCard
+          title="Grid Contribution"
+          percentage={gridShare}
+          energy={energyData?.grid_energy_kwh}
+          type="grid"
+        />
       </div>
 
       {/* Cost and CO2 */}
@@ -209,7 +187,7 @@ function EnergyCO2() {
         </h2>
 
         <p className="mt-1.5 text-sm text-[#667085]">
-          Simulated impact of shifting machine operation toward efficient energy
+          Calculated impact of shifting energy usage toward available solar
           periods
         </p>
       </div>
@@ -217,88 +195,65 @@ function EnergyCO2() {
       <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-2">
         <ComparisonCard
           title="Energy Cost"
-          current={`₹${ENERGY_CONFIG.currentCost.toLocaleString()}`}
-          optimized={`₹${ENERGY_CONFIG.optimizedCost.toLocaleString()}`}
-          saving={`₹${costSaving.toLocaleString()}`}
-          savingLabel={`${costSavingPercentage}% simulated reduction`}
+          current={`₹${(energyData?.current_cost_inr ?? 0).toFixed(2)}`}
+          optimized={`₹${(energyData?.optimized_cost_inr ?? 0).toFixed(2)}`}
+          saving={`₹${(energyData?.cost_saving_inr ?? 0).toFixed(2)}`}
         />
 
         <ComparisonCard
           title="CO₂ Emissions"
-          current={`${ENERGY_CONFIG.currentCO2} kg`}
-          optimized={`${ENERGY_CONFIG.optimizedCO2} kg`}
-          saving={`${co2Reduction} kg`}
-          savingLabel={`${co2ReductionPercentage}% simulated reduction`}
+          current={`${(energyData?.current_co2_kg ?? 0).toFixed(2)} kg`}
+          optimized={`${(energyData?.optimized_co2_kg ?? 0).toFixed(2)} kg`}
+          saving={`${(energyData?.co2_reduction_kg ?? 0).toFixed(2)} kg`}
         />
       </div>
 
-      {/* Machine Energy */}
+      {/* Energy Details */}
       <div className="rounded-xl border border-[#e4e7ec] bg-white shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
         <div className="border-b border-[#e4e7ec] px-5 py-4">
           <h2 className="text-[17px] font-semibold text-[#172033]">
-            Machine Energy Usage
+            Energy Details
           </h2>
 
           <p className="mt-1 text-[12px] text-[#98a2b3]">
-            Live power comes from the sensor stream; remaining values are
-            currently simulated
+            Machine #{MACHINE_ID} · Last {period} days
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead>
-              <tr className="border-b border-[#e4e7ec] bg-[#f9fafb] text-left">
-                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#98a2b3]">
-                  Machine
-                </th>
+        <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 xl:grid-cols-4">
+          <DetailItem
+            label="Total Energy"
+            value={`${(energyData?.total_energy_kwh ?? 0).toFixed(2)} kWh`}
+          />
 
-                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#98a2b3]">
-                  Current Power
-                </th>
+          <DetailItem label="Solar Share" value={`${solarShare}%`} />
 
-                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#98a2b3]">
-                  Solar Share
-                </th>
+          <DetailItem label="Grid Share" value={`${gridShare}%`} />
 
-                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#98a2b3]">
-                  Grid Share
-                </th>
+          <DetailItem
+            label="Idle Waste"
+            value={`${(energyData?.idle_waste_kwh ?? 0).toFixed(2)} kWh`}
+          />
 
-                <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#98a2b3]">
-                  Idle Waste
-                </th>
-              </tr>
-            </thead>
+          <DetailItem
+            label="Current Cost"
+            value={`₹${(energyData?.current_cost_inr ?? 0).toFixed(2)}`}
+          />
 
-            <tbody>
-              <tr className="border-b border-[#f0f2f5]">
-                <td className="px-5 py-4">
-                  <p className="text-sm font-semibold text-[#172033]">
-                    CNC Mill
-                  </p>
+          <DetailItem
+            label="Optimized Cost"
+            value={`₹${(energyData?.optimized_cost_inr ?? 0).toFixed(2)}`}
+          />
 
-                  <p className="mt-0.5 text-[11px] text-[#98a2b3]">CNC-001</p>
-                </td>
+          <DetailItem
+            label="Current CO₂"
+            value={`${(energyData?.current_co2_kg ?? 0).toFixed(2)} kg`}
+          />
 
-                <td className="px-5 py-4 text-sm font-semibold text-[#172033]">
-                  {currentPower} kW
-                </td>
-
-                <td className="px-5 py-4 text-sm font-semibold text-[#18a673]">
-                  {ENERGY_CONFIG.solarShare}%
-                </td>
-
-                <td className="px-5 py-4 text-sm font-semibold text-[#1597d4]">
-                  {ENERGY_CONFIG.gridShare}%
-                </td>
-
-                <td className="px-5 py-4 text-sm font-semibold text-[#e99a00]">
-                  {ENERGY_CONFIG.idleWaste} kWh
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <DetailItem
+            label="Optimized CO₂"
+            value={`${(energyData?.optimized_co2_kg ?? 0).toFixed(2)} kg`}
+          />
         </div>
       </div>
     </div>
@@ -327,7 +282,55 @@ function MetricCard({
   );
 }
 
-function ComparisonCard({ title, current, optimized, saving, savingLabel }) {
+function EnergyMixCard({ title, percentage, energy, type }) {
+  const isSolar = type === "solar";
+
+  return (
+    <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[13px] font-medium text-[#667085]">{title}</p>
+
+          <p
+            className={`mt-2 text-[32px] font-bold ${
+              isSolar ? "text-[#18a673]" : "text-[#1597d4]"
+            }`}
+          >
+            {percentage.toFixed(1)}%
+          </p>
+        </div>
+
+        <div
+          className={`flex h-12 w-12 items-center justify-center rounded-lg text-lg ${
+            isSolar
+              ? "bg-[#e6f8f1] text-[#18a673]"
+              : "bg-[#e8f6fc] text-[#1597d4]"
+          }`}
+        >
+          {isSolar ? "☀" : "⚡"}
+        </div>
+      </div>
+
+      <div className="mt-6 h-3 overflow-hidden rounded-full bg-[#eef1f4]">
+        <div
+          className={`h-full rounded-full ${
+            isSolar ? "bg-[#18a673]" : "bg-[#1597d4]"
+          }`}
+          style={{
+            width: `${Math.min(percentage, 100)}%`,
+          }}
+        />
+      </div>
+
+      <div className="mt-3 flex justify-between text-[12px] text-[#98a2b3]">
+        <span>{isSolar ? "Solar" : "Grid"}</span>
+        <span>{energy != null ? `${energy.toFixed(2)} kWh` : "—"}</span>
+      </div>
+    </div>
+  );
+}
+
+function ComparisonCard({ title, current, optimized, saving }) {
   return (
     <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
       <p className="text-[13px] font-medium text-[#667085]">{title}</p>
@@ -350,9 +353,17 @@ function ComparisonCard({ title, current, optimized, saving, savingLabel }) {
 
       <div className="mt-5 border-t border-[#eef1f4] pt-4">
         <p className="text-sm font-semibold text-[#18a673]">{saving} saved</p>
-
-        <p className="mt-1 text-[12px] text-[#98a2b3]">{savingLabel}</p>
       </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }) {
+  return (
+    <div className="rounded-lg border border-[#eef1f4] bg-[#f9fafb] p-4">
+      <p className="text-[11px] font-medium text-[#98a2b3]">{label}</p>
+
+      <p className="mt-2 text-sm font-semibold text-[#172033]">{value}</p>
     </div>
   );
 }

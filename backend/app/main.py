@@ -12,6 +12,8 @@ from app.routes.anomaly import router as anomaly_router
 from app.routes.live_data import router as live_data_router
 from app.models import Factory, Machine, SensorReading
 # from app.simulator.live_database import LiveDatabaseSimulator
+from app.routes.energy import router as energy_router
+from app.routes.simulation import router as simulation_router
 
 
 app = FastAPI(title="EcoTwin API")
@@ -66,3 +68,5 @@ app.include_router(machine_router)
 app.include_router(sensor_reading_router)
 app.include_router(anomaly_router)
 app.include_router(live_data_router)
+app.include_router(energy_router)
+app.include_router(simulation_router)

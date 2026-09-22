@@ -3,15 +3,23 @@ import { useMemo, useState } from "react";
 const API_URL = "http://127.0.0.1:8000";
 
 function Simulation() {
-  const [season, setSeason] = useState("normal");
-  const [load, setLoad] = useState("NORMAL");
+  const [season, setSeason] = useState("auto");
+  const [load, setLoad] = useState("AUTO");
   const [duration, setDuration] = useState("90");
   const [degradation, setDegradation] = useState(true);
+
   const [running, setRunning] = useState(false);
-  const [message, setMessage] = useState("");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
   const preview = useMemo(() => {
     const ranges = {
+      auto: {
+        temperature: "Season based",
+        vibration: "1.5–2.5",
+        voltage: "228–232",
+        current: "Load based",
+      },
       normal: {
         temperature: "60–70",
         vibration: "1.5–2.5",
@@ -49,21 +57,44 @@ function Simulation() {
           ? "4.5–7.0"
           : load === "HEAVY"
             ? "9.5–13.0"
-            : selected.current,
+            : load === "NORMAL"
+              ? selected.current
+              : "Load based",
     };
   }, [season, load]);
 
   const handleRunSimulation = async () => {
-    setRunning(true);
-    setMessage("");
+    try {
+      setRunning(true);
+      setError("");
+      setResult(null);
 
-    // Backend simulation endpoint will be connected here later.
-    await new Promise((resolve) => setTimeout(resolve, 800));
+      const response = await fetch(`${API_URL}/simulation/run`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          days: Number(duration),
+          season,
+          load,
+          degradation_enabled: degradation,
+        }),
+      });
 
-    setRunning(false);
-    setMessage(
-      "Simulation configuration is ready. Backend execution will be connected next.",
-    );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to run simulation");
+      }
+
+      setResult(data);
+    } catch (err) {
+      console.error("Simulation error:", err);
+      setError(err.message || "Unable to run simulation.");
+    } finally {
+      setRunning(false);
+    }
   };
 
   return (
@@ -89,88 +120,57 @@ function Simulation() {
 
       {/* Configuration */}
       <div className="mb-8 grid grid-cols-1 gap-5 xl:grid-cols-3">
-        {/* Environment */}
-        <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
-          <p className="text-[13px] font-semibold text-[#172033]">
-            Environment
-          </p>
+        <ConfigSection title="Environment">
+          <label className="mb-2 block text-[12px] font-medium text-[#667085]">
+            Season
+          </label>
 
-          <p className="mt-1 text-[12px] text-[#98a2b3]">
-            Select the simulated operating season
-          </p>
+          <select
+            value={season}
+            onChange={(event) => setSeason(event.target.value)}
+            className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
+          >
+            <option value="auto">Automatic</option>
+            <option value="normal">Normal</option>
+            <option value="summer">Summer</option>
+            <option value="monsoon">Monsoon</option>
+            <option value="winter">Winter</option>
+          </select>
+        </ConfigSection>
 
-          <div className="mt-5">
-            <label className="mb-2 block text-[12px] font-medium text-[#667085]">
-              Season
-            </label>
+        <ConfigSection title="Machine Load">
+          <label className="mb-2 block text-[12px] font-medium text-[#667085]">
+            Load
+          </label>
 
-            <select
-              value={season}
-              onChange={(event) => setSeason(event.target.value)}
-              className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
-            >
-              <option value="normal">Normal</option>
-              <option value="summer">Summer</option>
-              <option value="monsoon">Monsoon</option>
-              <option value="winter">Winter</option>
-            </select>
-          </div>
-        </div>
+          <select
+            value={load}
+            onChange={(event) => setLoad(event.target.value)}
+            className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
+          >
+            <option value="AUTO">Automatic Cycle</option>
+            <option value="IDLE">Idle</option>
+            <option value="NORMAL">Normal</option>
+            <option value="HEAVY">Heavy</option>
+          </select>
+        </ConfigSection>
 
-        {/* Machine Load */}
-        <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
-          <p className="text-[13px] font-semibold text-[#172033]">
-            Machine Load
-          </p>
+        <ConfigSection title="Simulation Duration">
+          <label className="mb-2 block text-[12px] font-medium text-[#667085]">
+            Duration
+          </label>
 
-          <p className="mt-1 text-[12px] text-[#98a2b3]">
-            Choose the operating intensity
-          </p>
-
-          <div className="mt-5">
-            <label className="mb-2 block text-[12px] font-medium text-[#667085]">
-              Load
-            </label>
-
-            <select
-              value={load}
-              onChange={(event) => setLoad(event.target.value)}
-              className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
-            >
-              <option value="IDLE">Idle</option>
-              <option value="NORMAL">Normal</option>
-              <option value="HEAVY">Heavy</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Duration */}
-        <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
-          <p className="text-[13px] font-semibold text-[#172033]">
-            Simulation Duration
-          </p>
-
-          <p className="mt-1 text-[12px] text-[#98a2b3]">
-            Select the historical period to generate
-          </p>
-
-          <div className="mt-5">
-            <label className="mb-2 block text-[12px] font-medium text-[#667085]">
-              Duration
-            </label>
-
-            <select
-              value={duration}
-              onChange={(event) => setDuration(event.target.value)}
-              className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
-            >
-              <option value="7">7 Days</option>
-              <option value="30">30 Days</option>
-              <option value="60">60 Days</option>
-              <option value="90">90 Days</option>
-            </select>
-          </div>
-        </div>
+          <select
+            value={duration}
+            onChange={(event) => setDuration(event.target.value)}
+            className="h-11 w-full rounded-lg border border-[#e4e7ec] bg-white px-3 text-sm text-[#172033] outline-none focus:border-[#1597d4]"
+          >
+            <option value="7">7 Days</option>
+            <option value="30">30 Days</option>
+            <option value="60">60 Days</option>
+            <option value="90">90 Days</option>
+          </select>
+        </ConfigSection>
       </div>
 
       {/* Degradation + Run */}
@@ -211,14 +211,42 @@ function Simulation() {
           disabled={running}
           className="flex min-h-[100px] items-center justify-center rounded-xl bg-[#1597d4] px-7 text-sm font-semibold text-white shadow-[0_2px_6px_rgba(16,24,40,0.08)] transition hover:bg-[#0877ad] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {running ? "Preparing..." : "Run Simulation"}
+          {running ? "Running..." : "Run Simulation"}
         </button>
       </div>
 
-      {/* Message */}
-      {message && (
-        <div className="mb-8 rounded-lg border border-[#e8f6fc] bg-[#e8f6fc] px-4 py-3 text-sm text-[#0877ad]">
-          {message}
+      {/* Error */}
+      {error && (
+        <div className="mb-8 rounded-lg border border-[#fdecec] bg-[#fdecec] px-4 py-3 text-sm text-[#dc4b4b]">
+          {error}
+        </div>
+      )}
+
+      {/* Result */}
+      {result && (
+        <div className="mb-8 rounded-xl border border-[#e6f8f1] bg-white shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
+          <div className="border-b border-[#e6f8f1] bg-[#e6f8f1] px-5 py-4">
+            <h2 className="text-[17px] font-semibold text-[#172033]">
+              Simulation Completed
+            </h2>
+
+            <p className="mt-1 text-[12px] text-[#18a673]">
+              The selected simulation was generated successfully.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-5 p-5 md:grid-cols-4">
+            <ResultCard label="Duration" value={`${result.days} days`} />
+
+            <ResultCard
+              label="Readings Generated"
+              value={result.readings_generated}
+            />
+
+            <ResultCard label="Season" value={result.season} />
+
+            <ResultCard label="Load" value={result.load} />
+          </div>
         </div>
       )}
 
@@ -236,10 +264,17 @@ function Simulation() {
       <div className="mb-8 grid grid-cols-2 gap-5 md:grid-cols-4">
         <ConfigCard
           label="Season"
-          value={season.charAt(0).toUpperCase() + season.slice(1)}
+          value={
+            season === "auto"
+              ? "Automatic"
+              : season.charAt(0).toUpperCase() + season.slice(1)
+          }
         />
 
-        <ConfigCard label="Machine Load" value={load} />
+        <ConfigCard
+          label="Machine Load"
+          value={load === "AUTO" ? "Automatic Cycle" : load}
+        />
 
         <ConfigCard label="Duration" value={`${duration} Days`} />
 
@@ -283,12 +318,38 @@ function Simulation() {
   );
 }
 
+function ConfigSection({ title, children }) {
+  return (
+    <div className="rounded-xl border border-[#e4e7ec] bg-white p-6 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
+      <p className="text-[13px] font-semibold text-[#172033]">{title}</p>
+
+      <p className="mt-1 text-[12px] text-[#98a2b3]">
+        Configure the simulation parameters
+      </p>
+
+      <div className="mt-5">{children}</div>
+    </div>
+  );
+}
+
 function ConfigCard({ label, value }) {
   return (
     <div className="rounded-xl border border-[#e4e7ec] bg-white p-5 shadow-[0_2px_6px_rgba(16,24,40,0.05)]">
       <p className="text-[11px] font-medium text-[#98a2b3]">{label}</p>
 
       <p className="mt-2 text-sm font-semibold text-[#172033]">{value}</p>
+    </div>
+  );
+}
+
+function ResultCard({ label, value }) {
+  return (
+    <div className="rounded-lg border border-[#eef1f4] bg-[#f9fafb] p-4">
+      <p className="text-[11px] font-medium text-[#98a2b3]">{label}</p>
+
+      <p className="mt-2 text-sm font-semibold capitalize text-[#172033]">
+        {value}
+      </p>
     </div>
   );
 }
